@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoFazenda: Agro Forte, Futuro Sustentável</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #game-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            text-align: center;
+            border: 3px solid #81c784;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #1b5e20;
+        }
+
+        h2 {
+            font-size: 16px;
+            font-weight: 400;
+            margin-bottom: 25px;
+            color: #4caf50;
+        }
+
+        /* Painel de Status */
+        .status-container {
+            margin-bottom: 25px;
+            background: #f1f8e9;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .status-bar-wrapper {
+            margin: 12px 0;
+            text-align: left;
+        }
+
+        .status-label {
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .status-bar {
+            width: 100%;
+            background-color: #dde7db;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status-fill {
+            height: 100%;
+            width: 50%;
+            transition: width 0.5s ease-in-out, background-color 0.5s ease;
+        }
+
+        #fill-producao { background-color: #ffa726; }
+        #fill-ambiente { background-color: #66bb6a; }
+        #fill-financeiro { background-color: #29b6f6; }
+
+        /* Área da Pergunta */
+        #question-box {
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #fafafa;
+            border-radius: 8px;
+            border-left: 5px solid #4caf50;
+        }
+
+        /* Botões de Decisão */
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background-color: #388e3c;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Telas de Fim de Jogo */
+        .hidden {
+            display: none !important;
+        }
+
+        #feedback-text {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="game-screen">
+            <h1>EcoFazenda</h1>
+            <h2>Agro forte, futuro sustentável</h2>
+
+            <div class="status-container">
+                <div class="status-bar-wrapper">
+                    <div class="status-label"><span>🚜 Produção Agrícola</span><span id="txt-producao">50%</span></div>
+                    <div class="status-bar"><div id="fill-producao" class="status-fill"></div></div>
+                </div>
+                <div class="status-bar-wrapper">
+                    <div class="status-label"><span>🌳 Saúde do Meio Ambiente</span><span id="txt-ambiente">50%</span></div>
+                    <div class="status-bar"><div id="fill-ambiente" class="status-fill"></div></div>
+                </div>
+                <div class="status-bar-wrapper">
+                    <div class="status-label"><span>💰 Saúde Financeira</span><span id="txt-financeiro">50%</span></div>
+                    <div class="status-bar"><div id="fill-financeiro" class="status-fill"></div></div>
+                </div>
+            </div>
+
+            <div id="question-box">Carregando desafio...</div>
+            <div class="options-container">
+                <button id="btn-opt1" onclick="escolherOpcao(1)">Opção 1</button>
+                <button id="btn-opt2" onclick="escolherOpcao(2)">Opção 2</button>
+            </div>
+        </div>
+
+        <div id="end-screen" class="hidden">
+            <h1 id="end-title">Fim da Temporada!</h1>
+            <p id="feedback-text">Resultado da sua gestão empresarial e ecológica.</p>
+            <button onclick="reiniciarJogo()">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        // Banco de dados dos desafios (Perguntas e Impactos)
+        const rodadas = [
+            {
+                pergunta: "Pragas surgiram na plantação de milho. O que você faz?",
+                opcao1: { texto: "Aplicar defensivos químicos pesados imediatamente.", prod: 25, amb: -25, fin: -10 },
+                opcao2: { texto: "Adotar o Manejo Integrado de Pragas (MIP) com controle biológico.", prod: 15, amb: 15, fin: -15 }
+            },
+            {
+                pergunta: "É época de preparar o solo para a próxima safra. Qual técnica usar?",
+                opcao1: { texto: "Realizar o arado convencional revirando a terra.", prod: 15, amb: -20, fin: -5 },
+                opcao2: { texto: "Implementar o Plantio Direto na palha, protegendo o solo.", prod: 20, amb: 20, fin: -10 }
+            },
+            {
+                pergunta: "Como gerenciar os recursos hídricos da propriedade em tempos de estiagem?",
+                opcao1: { texto: "Manter a irrigação por inundação contínua para garantir a safra.", prod: 15, amb: -25, fin: -5 },
+                opcao2: { texto: "Instalar sistema de gotejamento e monitoramento por sensores.", prod: 20, amb: 25, fin: -25 }
+            },
+            {
+                pergunta: "Uma área de Mata Ciliar na margem do rio da fazenda está degradada. Qual a ação?",
+                opcao1: { texto: "Deixar como está para não gastar recursos agora.", prod: 0, amb: -20, fin: 5 },
+                opcao2: { texto: "Isolar a área e plantar mudas nativas para reflorestamento.", prod: -5, amb: 30, fin: -15 }
+            },
+            {
+                pergunta: "Qual destino dar para as embalagens vazias de defensivos e insumos?",
+                opcao1: { texto: "Queimar ou enterrar nos fundos da propriedade.", prod: 0, amb: -30, fin: 0 },
+                opcao2: { texto: "Fazer a tríplice lavagem e enviar para a logística reversa.", prod: 5, amb: 20, fin: -5 }
+            }
+        ];
+
+        // Variáveis de Estado do Jogo
+        let status = { producao: 50, ambiente: 50, financeiro: 50 };
+        let rodadaAtual = 0;
+
+        // Inicializa o Jogo
+        function iniciarJogo() {
+            status = { producao: 50, ambiente: 50, financeiro: 50 };
+            rodadaAtual = 0;
+            document.getElementById("game-screen").classList.remove("hidden");
+            document.getElementById("end-screen").classList.add("hidden");
+            atualizarInterface();
+            mostrarRodada();
+        }
+
+        // Atualiza as barras visuais e números
+        function atualizarInterface() {
+            // Limita os valores entre 0 e 100
+            for (let chave in status) {
+                status[chave] = Math.max(0, Math.min(100, status[chave]));
+            }
+
+            document.getElementById("fill-producao").style.width = status.producao + "%";
+            document.getElementById("txt-producao").innerText = status.producao + "%";
+
+            document.getElementById("fill-ambiente").style.width = status.ambiente + "%";
+            document.getElementById("txt-ambiente").innerText = status.ambiente + "%";
+
+            document.getElementById("fill-financeiro").style.width = status.financeiro + "%";
+            document.getElementById("txt-financeiro").innerText = status.financeiro + "%";
+        }
+
+        // Exibe a pergunta e botões da rodada atual
+        function mostrarRodada() {
+            if (rodadaAtual < rodadas.length) {
+                let dados = rodadas[rodadaAtual];
+                document.getElementById("question-box").innerText = dados.pergunta;
+                document.getElementById("btn-opt1").innerText = dados.opcao1.texto;
+                document.getElementById("btn-opt2").innerText = dados.opcao2.texto;
+            } else {
+                finalizarJogo();
+            }
+        }
+
+        // Processa a escolha do jogador
+        function escolherOpcao(numeroOpcao) {
+            let dados = rodadas[rodadaAtual];
+            let escolha = numeroOpcao === 1 ? dados.opcao1 : dados.opcao2;
+
+            // Aplica os impactos no status
+            status.producao += escolha.prod;
+            status.ambiente += escolha.amb;
+            status.financeiro += escolha.fin;
+
+            atualizarInterface();
+
+            // Verifica condições críticas de derrota imediata
+            if (status.ambiente <= 0) {
+                finalizarJogo("derrota-ambiente");
+                return;
+            } else if (status.financeiro <= 0) {
+                finalizarJogo("derrota-financeira");
+                return;
+            } else if (status.producao <= 0) {
+                finalizarJogo("derrota-producao");
+                return;
+            }
+
+            rodadaAtual++;
+            
+            // Pequeno delay para o jogador ver a barra mexer antes da próxima pergunta
+            setTimeout(mostrarRodada, 400);
+        }
+
+        // Tela Final do Jogo
+        function finalizarJogo(motivo) {
+            document.getElementById("game-screen").classList.add("hidden");
+            document.getElementById("end-screen").classList.remove("hidden");
+
+            let titulo = document.getElementById("end-title");
+            let feedback = document.getElementById("feedback-text");
+
+            if (motivo === "derrota-ambiente") {
+                titulo.innerText = "Fim de Jogo: Desastre Ambiental!";
+                feedback.innerText = "Sua fazenda produziu muito, mas a degradação destruiu os recursos naturais locais. Sem solo saudável e água limpa, o futuro da região foi comprometido.";
+            } else if (motivo === "derrota-financeira") {
+                titulo.innerText = "Fim de Jogo: Falência!";
+                feedback.innerText = "Você investiu tanto ou geriu tão mal os recursos que a fazenda faliu. Para manter o agro forte, o negócio também precisa ser economicamente viável.";
+            } else if (motivo === "derrota-producao") {
+                titulo.innerText = "Fim de Jogo: Baixa Produtividade!";
+                feedback.innerText = "Sua produção caiu a zero. A fazenda não conseguiu gerar alimentos e produtos básicos para abastecer a população.";
+            } else {
+                // Terminou todas as rodadas vivo - Calcula pontuação de sustentabilidade equilibrada
+                if (status.ambiente >= 60 && status.producao >= 60 && status.financeiro >= 50) {
+                    titulo.innerText = "Parabéns! Fazenda Nota 10!";
+                    feedback.innerText = `Excelente gestão! Você provou que o "Agro é forte e o futuro é sustentável". Suas barras finais foram: Produção (${status.producao}%), Ambiente (${status.ambiente}%) e Financeiro (${status.financeiro}%). Equilíbrio perfeito!`;
+                } else {
+                    titulo.innerText = "Temporada Concluída!";
+                    feedback.innerText = `Você conseguiu chegar ao fim da temporada! Porém, pode equilibrar melhor suas escolhas para obter um ecossistema mais sustentável. Barras finais: Produção: ${status.producao}% | Ambiente: ${status.ambiente}% | Financeiro: ${status.financeiro}%.`;
+                }
+            }
+        }
+
+        function reiniciarJogo() {
+            iniciarJogo();
+        }
+
+        // Inicia o jogo assim que a página carrega
+        window.onload = iniciarJogo;
+    </script>
+</body>
+</html>
